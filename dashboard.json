@@ -440,55 +440,100 @@
         "name": "베이시스",
         "vote": 1.0,
         "weight": 0.9,
-        "reason": "베이시스 +21.28p 콘탱고 — 선물 매수 우위"
+        "reason": "베이시스 +21.28p 콘탱고 — 선물 매수 우위",
+        "prev_vote": 1.0,
+        "vote_delta": 0.0,
+        "prev_tag": "강세",
+        "flipped": false,
+        "is_new": false
       },
       {
         "name": "거래대금 P/C",
         "vote": -1.0,
         "weight": 1.4,
-        "reason": "거래대금 풋/콜 2.03 풋 거래대금 우위 — 하방 헤지/약세 자금"
+        "reason": "거래대금 풋/콜 2.03 풋 거래대금 우위 — 하방 헤지/약세 자금",
+        "prev_vote": -0.73,
+        "vote_delta": -0.27,
+        "prev_tag": "약세",
+        "flipped": false,
+        "is_new": false
       },
       {
         "name": "풋/콜 OI 비율",
         "vote": -1.0,
         "weight": 0.7,
-        "reason": "풋/콜 OI 2.76 풋 편중 — 하방 헤지 우위"
+        "reason": "풋/콜 OI 2.76 풋 편중 — 하방 헤지 우위",
+        "prev_vote": -1.0,
+        "vote_delta": 0.0,
+        "prev_tag": "약세",
+        "flipped": false,
+        "is_new": false
       },
       {
         "name": "풋/콜 모멘텀",
         "vote": 0.59,
         "weight": 0.6,
-        "reason": "풋/콜 비율 전일 대비 -0.09 하락 — 강세 전환 흐름"
+        "reason": "풋/콜 비율 전일 대비 -0.09 하락 — 강세 전환 흐름",
+        "prev_vote": -0.45,
+        "vote_delta": 1.04,
+        "prev_tag": "약세",
+        "flipped": true,
+        "is_new": false
       },
       {
         "name": "옵션 신규 포지션",
         "vote": 0.01,
         "weight": 0.8,
-        "reason": "콜 OI +6,893 vs 풋 OI +6,711 — 콜 신규 우위(강세 포지셔닝)"
+        "reason": "콜 OI +6,893 vs 풋 OI +6,711 — 콜 신규 우위(강세 포지셔닝)",
+        "prev_vote": -0.73,
+        "vote_delta": 0.74,
+        "prev_tag": "약세",
+        "flipped": true,
+        "is_new": false
       },
       {
         "name": "선물 OI×가격",
         "vote": -0.6,
         "weight": 0.7,
-        "reason": "선물 미결제 +5,863 — 가격↓+OI↑ 신규 매도(숏) 구축"
+        "reason": "선물 미결제 +5,863 — 가격↓+OI↑ 신규 매도(숏) 구축",
+        "prev_vote": 0.3,
+        "vote_delta": -0.9,
+        "prev_tag": "강세",
+        "flipped": true,
+        "is_new": false
       },
       {
         "name": "외국인 선물",
         "vote": -0.01,
         "weight": 1.3,
-        "reason": "만기 이후 외국인 선물 누적 -326억원 순매도(약세)"
+        "reason": "만기 이후 외국인 선물 누적 -326억원 순매도(약세)",
+        "prev_vote": -0.01,
+        "vote_delta": 0.0,
+        "prev_tag": "중립",
+        "flipped": false,
+        "is_new": false
       },
       {
         "name": "기관 선물",
         "vote": 0.34,
         "weight": 0.9,
-        "reason": "만기 이후 기관 선물 누적 +10,285억원 순매수(강세)"
+        "reason": "만기 이후 기관 선물 누적 +10,285억원 순매수(강세)",
+        "prev_vote": 0.34,
+        "vote_delta": 0.0,
+        "prev_tag": "강세",
+        "flipped": false,
+        "is_new": false
       },
       {
         "name": "외국인 옵션",
         "vote": -1.0,
         "weight": 0.8,
-        "reason": "만기 이후 외국인 콜 -215 / 풋 +416억원 — 풋 우위(약세/헤지)"
+        "reason": "만기 이후 외국인 콜 -215 / 풋 +416억원 — 풋 우위(약세/헤지)",
+        "prev_vote": -1.0,
+        "vote_delta": 0.0,
+        "prev_tag": "약세",
+        "flipped": false,
+        "is_new": false
       }
     ],
     "summary": "종합 방향성 스코어 -0.22 → 약약세 (Mildly Bearish). 파생 신호 9개 중 5개가 하락 방향을 지지 (신뢰도 56%). 주요 지지 신호: 거래대금 P/C, 풋/콜 OI 비율, 선물 OI×가격, 외국인 선물, 외국인 옵션. 단, 이는 파생 포지셔닝 기반 심리 지표로 실제 지수 방향을 보장하지 않습니다.",
