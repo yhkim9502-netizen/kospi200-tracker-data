@@ -4,9 +4,9 @@
     "next_expiry": "20260709",
     "today": "20260708",
     "as_of": "20260708",
-    "calendar_today": "20260708",
+    "calendar_today": "20260709",
     "source": "krx_live",
-    "generated_at": "2026-07-08T23:05:22",
+    "generated_at": "2026-07-09T01:01:59",
     "rows": 19
   },
   "series": {
@@ -495,21 +495,21 @@
     {
       "level": "alert",
       "category": "foreign_futures",
-      "title": "외국인 선물 누적 순매수 22,394억원",
-      "detail": "만기(20260611) 이후 외국인 선물 순순매수 누적 +22,394억원.",
+      "title": "외국인 선물 누적 순매수 47,551억원",
+      "detail": "만기(20260611) 이후 외국인 선물 순순매수 누적 +47,551억원.",
       "interpretation": "외국인이 선물을 기준으로 지수 강세 방향에 누적 베팅. 현물 수급과 함께 보면 방향성 신뢰도가 높아짐."
     },
     {
       "level": "watch",
       "category": "divergence",
       "title": "외국인·기관 선물 방향 엇갈림",
-      "detail": "외국인 선물 순매수(+22,394) vs 기관 순매도(-10,598).",
+      "detail": "외국인 선물 순매수(+47,551) vs 기관 순매도(-39,941).",
       "interpretation": "주요 주체 간 방향성이 엇갈려 대치 구도. 누가 이기느냐가 단기 지수 흐름을 좌우할 가능성."
     }
   ],
-  "narrative": "20260708 코스피200 파생시장: 베이시스 +11.18p(콘탱고), 거래대금 풋/콜 1.39(풋 거래대금 우위(약세/헤지)), 풋/콜 OI 2.41(풋 우위(방어적)), 선물 미결제 +6,035계약. 만기 이후 누적: 외국인 선물 22,394억원 순매수, 기관 선물 10,598억원 순매도.",
+  "narrative": "20260708 코스피200 파생시장: 베이시스 +11.18p(콘탱고), 거래대금 풋/콜 1.39(풋 거래대금 우위(약세/헤지)), 풋/콜 OI 2.41(풋 우위(방어적)), 선물 미결제 +6,035계약. 만기 이후 누적: 외국인 선물 47,551억원 순매수, 기관 선물 39,941억원 순매도.",
   "directional": {
-    "score": 0.077,
+    "score": 0.086,
     "stance": "중립 (Neutral)",
     "confidence": 56,
     "signals": [
@@ -581,10 +581,10 @@
       },
       {
         "name": "외국인 선물",
-        "vote": 0.75,
+        "vote": 1.0,
         "weight": 1.3,
-        "reason": "만기 이후 외국인 선물 누적 +22,394억원 순매수(강세)",
-        "prev_vote": 0.75,
+        "reason": "만기 이후 외국인 선물 누적 +47,551억원 순매수(강세)",
+        "prev_vote": 1.0,
         "vote_delta": 0.0,
         "prev_tag": "강세",
         "flipped": false,
@@ -592,10 +592,10 @@
       },
       {
         "name": "기관 선물",
-        "vote": -0.35,
+        "vote": -1.0,
         "weight": 0.9,
-        "reason": "만기 이후 기관 선물 누적 -10,598억원 순매도(약세)",
-        "prev_vote": -0.35,
+        "reason": "만기 이후 기관 선물 누적 -39,941억원 순매도(약세)",
+        "prev_vote": -1.0,
         "vote_delta": 0.0,
         "prev_tag": "약세",
         "flipped": false,
@@ -603,20 +603,20 @@
       },
       {
         "name": "외국인 옵션",
-        "vote": 0.54,
+        "vote": 0.94,
         "weight": 0.8,
-        "reason": "만기 이후 외국인 콜 +1,887 / 풋 +568억원 — 콜 우위(강세)",
-        "prev_vote": 0.54,
+        "reason": "만기 이후 외국인 콜 +1,705 / 풋 +53억원 — 콜 우위(강세)",
+        "prev_vote": 0.94,
         "vote_delta": 0.0,
         "prev_tag": "강세",
         "flipped": false,
         "is_new": false
       }
     ],
-    "summary": "종합 방향성 스코어 +0.08 → 중립 (Neutral). 파생 신호 9개 중 5개가 횡보/중립 방향을 지지 (신뢰도 56%). 주요 지지 신호: 베이시스, 풋/콜 모멘텀, 옵션 신규 포지션, 외국인 선물, 외국인 옵션. 단, 이는 파생 포지셔닝 기반 심리 지표로 실제 지수 방향을 보장하지 않습니다.",
-    "prev_score": 0.018,
+    "summary": "종합 방향성 스코어 +0.09 → 중립 (Neutral). 파생 신호 9개 중 5개가 횡보/중립 방향을 지지 (신뢰도 56%). 주요 지지 신호: 베이시스, 풋/콜 모멘텀, 옵션 신규 포지션, 외국인 선물, 외국인 옵션. 단, 이는 파생 포지셔닝 기반 심리 지표로 실제 지수 방향을 보장하지 않습니다.",
+    "prev_score": 0.026,
     "prev_stance": "중립 (Neutral)",
-    "score_delta": 0.059,
+    "score_delta": 0.06,
     "deltas": {
       "basis": -10.75,
       "pc_ratio_oi": -0.2333,
@@ -984,16 +984,58 @@
         "cum_inst_call": -1882.7,
         "cum_inst_fut": -10598.400000000005,
         "cum_inst_put": -628.1
+      },
+      {
+        "date": "20260707",
+        "foreign_call": -91.0,
+        "foreign_fut": 8819.9,
+        "foreign_put": -77.6,
+        "indiv_call": 29.8,
+        "indiv_fut": 1363.0,
+        "indiv_put": -32.1,
+        "inst_call": 56.4,
+        "inst_fut": -9887.6,
+        "inst_put": 94.4,
+        "cum_foreign_call": 1796.0000000000002,
+        "cum_foreign_fut": 31213.4,
+        "cum_foreign_put": 490.89999999999986,
+        "cum_indiv_call": 29.89999999999998,
+        "cum_indiv_fut": -7909.000000000002,
+        "cum_indiv_put": 91.1,
+        "cum_inst_call": -1826.3,
+        "cum_inst_fut": -20486.000000000007,
+        "cum_inst_put": -533.7
+      },
+      {
+        "date": "20260708",
+        "foreign_call": -90.6,
+        "foreign_fut": 16337.3,
+        "foreign_put": -437.9,
+        "indiv_call": 44.6,
+        "indiv_fut": 2835.0,
+        "indiv_put": -28.1,
+        "inst_call": 49.7,
+        "inst_fut": -19455.4,
+        "inst_put": 467.0,
+        "cum_foreign_call": 1705.4000000000003,
+        "cum_foreign_fut": 47550.7,
+        "cum_foreign_put": 52.999999999999886,
+        "cum_indiv_call": 74.49999999999999,
+        "cum_indiv_fut": -5074.000000000002,
+        "cum_indiv_put": 62.99999999999999,
+        "cum_inst_call": -1776.6,
+        "cum_inst_fut": -39941.40000000001,
+        "cum_inst_put": -66.70000000000005
       }
     ],
     "cumulative": {
-      "futures": 22393.5,
-      "call": 1887.0000000000002,
-      "put": 568.4999999999999,
-      "inst_futures": -10598.400000000005,
-      "inst_call": -1882.7,
-      "inst_put": -628.1,
-      "indiv_futures": -9272.000000000002
+      "futures": 47550.7,
+      "call": 1705.4000000000003,
+      "put": 52.999999999999886,
+      "inst_futures": -39941.40000000001,
+      "inst_call": -1776.6,
+      "inst_put": -66.70000000000005,
+      "indiv_futures": -5074.000000000002
     },
     "columns": [
       "foreign_call",
@@ -1010,17 +1052,17 @@
     "unit_label": "억원",
     "is_value": true,
     "cumulative_all": {
-      "foreign_fut": 22393.5,
-      "foreign_call": 1887.0000000000002,
-      "foreign_put": 568.4999999999999,
-      "inst_fut": -10598.400000000005,
-      "inst_call": -1882.7,
-      "inst_put": -628.1,
-      "indiv_fut": -9272.000000000002,
-      "indiv_call": 0.0999999999999801,
-      "indiv_put": 123.19999999999999
+      "foreign_fut": 47550.7,
+      "foreign_call": 1705.4000000000003,
+      "foreign_put": 52.999999999999886,
+      "inst_fut": -39941.40000000001,
+      "inst_call": -1776.6,
+      "inst_put": -66.70000000000005,
+      "indiv_fut": -5074.000000000002,
+      "indiv_call": 74.49999999999999,
+      "indiv_put": 62.99999999999999
     },
-    "as_of": "20260706"
+    "as_of": "20260708"
   },
   "has_foreign_layer": true
 }
