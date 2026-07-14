@@ -157,7 +157,7 @@
   .pos-row .pos-v{text-align:right;font-variant-numeric:tabular-nums}
   .pos-row .pos-v em{font-style:normal;color:#8b98a9}
   .pos-row.pos-na .pos-v{color:#6b7a90;font-size:11.5px}
-  /* 업로드 엑셀 기반 선물 투자자별 순매수 표 */
+  /* KRX 자동수집 기반 주식선물 투자자별 순매수 표 */
   .inv-fut{margin-top:10px}
   .inv-cap{font-size:11.5px;font-weight:700;color:#c4cddb;margin-bottom:5px}
   .inv-tbl{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
@@ -321,19 +321,19 @@
     </div>
   </div>
 
-  <h2 class="section-head stocks" id="secStocks">📈 개별종목 파생 분석 <span class="sh-sub">— 삼성전자 → SK하이닉스 순 · 투자자별 수급 미제공 · 방향성 프록시</span></h2>
+  <h2 class="section-head stocks" id="secStocks">📈 개별종목 파생 분석 <span class="sh-sub">— 삼성전자 → SK하이닉스 순 · 주식선물 투자자별 수급 자동갱신 · 방향성 프록시</span></h2>
 
   <!-- 개별종목 인사이트 -->
   <div class="card" id="stkInsightCard" style="display:none;margin-bottom:16px;border-color:rgba(93,169,255,.30);background:linear-gradient(135deg,rgba(93,169,255,.07),var(--panel))">
     <div class="inv-head">
-      <h3 style="margin-bottom:0">💡 개별종목 인사이트 <span class="hint">— 삼성전자·SK하이닉스 선물·옵션 종합 방향성 (투자자별 수급 미제공 · 방향성 프록시)</span></h3>
+      <h3 style="margin-bottom:0">💡 개별종목 인사이트 <span class="hint">— 삼성전자·SK하이닉스 선물·옵션 종합 방향성 (주식선물 투자자별 수급 포함 · 방향성 프록시)</span></h3>
     </div>
     <div class="stk-insight-grid" id="stkInsightGrid" style="margin-top:12px"></div>
   </div>
 
   <div class="card" id="stkCard" style="display:none;margin-bottom:16px;border-color:rgba(93,169,255,.30);background:linear-gradient(135deg,rgba(93,169,255,.06),var(--panel))">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-      <h3 style="margin-bottom:0">📈 개별주식 선물·옵션 <span class="hint">— 삼성전자·SK하이닉스 시세·OI·콜/풋 · 계약월별(비분기월 2+분기월 4) 둘째 목요일 만기 (투자자 수급 미포함)</span></h3>
+      <h3 style="margin-bottom:0">📈 개별주식 선물·옵션 <span class="hint">— 삼성전자·SK하이닉스 시세·OI·콜/풋 · 계약월별(비분기월 2+분기월 4) 둘째 목요일 만기 (주식선물 투자자 수급 포함)</span></h3>
       <div class="seg" id="stkSeg"></div>
     </div>
     <div class="inv-summary" id="stkSummary" style="margin-top:10px"></div>

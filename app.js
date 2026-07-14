@@ -173,7 +173,7 @@ function positioningHTML(pos, key) {
     + `</div>`;
 }
 
-// 업로드 엑셀 기반 단일주식선물 투자자별 순매수 표. 현재/전일/5D/20D + 외국인 누적.
+// KRX 자동수집 기반 단일주식선물 투자자별 순매수 표. 현재/전일/5D/20D + 외국인 누적.
 // 색상은 순매수(+, 강세측) 초록 / 순매도(−) 빨강. 미제공/구소스는 honest 미제공 행.
 function investorFuturesHTML(invF, key) {
   if (!invF || !invF.available) {
@@ -194,8 +194,8 @@ function investorFuturesHTML(invF, key) {
   const stale = invF.stale
     ? `<span class="iv-stale" title="파생 기준일과 불일치">stale · ${invF.lag_days}일 지연</span>`
     : `<span class="iv-fresh">최신</span>`;
-  const note = `${invF.scope_note || "업로드 자료 기준 · 월물 범위 미표기 · 순매수 거래대금(백만원)"}`
-    + ` · 출처 ${invF.source === "uploaded_excel" ? "업로드 Excel" : (invF.source || "")}`
+  const note = `${invF.scope_note || "전체 상장월물 합산 · 순매수 거래대금(백만원)"}`
+    + ` · 출처 ${invF.source === "krx_web" ? "KRX 자동수집" : (invF.source === "uploaded_excel" ? "업로드 Excel" : (invF.source || ""))}`
     + ` · 기준일 ${fmtD(invF.as_of)} ${stale}`;
   const cumLine = cum.foreign == null ? "" :
     `<div class="iv-cum">외국인 누적 순매수 거래대금(${fmtD(cum.since)}~): `
@@ -242,7 +242,7 @@ function renderStockInsights(si, sf) {
            + `<span class="dt">${s.detail}</span></div>`;
     }).join("");
     const conf = v.confidence == null ? "" :
-      `<span class="conf" title="투자자 수급 미제공 등으로 신뢰도 상한 80%">신뢰도 ${v.confidence}%</span>`;
+      `<span class="conf" title="데이터 가용성에 따라 신뢰도 상한 적용">신뢰도 ${v.confidence}%</span>`;
     const proxy = v.is_proxy
       ? `<span class="proxy-tag" title="델타환산 아님 · 프록시">프록시</span>` : "";
     const posBlk = positioningHTML(
