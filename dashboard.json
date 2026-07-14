@@ -6,7 +6,7 @@
     "as_of": "20260713",
     "calendar_today": "20260715",
     "source": "krx_live",
-    "generated_at": "2026-07-15T02:51:22+09:00",
+    "generated_at": "2026-07-15T02:54:07+09:00",
     "update_schedule": "next_business_day_08:00_KST",
     "cycles": {
       "index_futures": {
@@ -1478,8 +1478,8 @@
         },
         "investor_futures": {
           "available": true,
-          "source": "krx_web",
-          "source_file": null,
+          "source": "uploaded_excel",
+          "source_file": "jeonja-seonmul-2.xlsx",
           "scope_note": "업로드 자료 기준 · 월물 범위 미표기 · 순매수 거래대금(백만원)",
           "metric": "순매수 거래대금",
           "unit": "KRW_million",
@@ -1490,10 +1490,10 @@
           "sessions": 122,
           "current": {
             "date": "20260713",
-            "foreign": 0,
-            "inst": 0,
-            "indiv": 0,
-            "other_corp": 0,
+            "foreign": 127938,
+            "inst": 42436,
+            "indiv": -162363,
+            "other_corp": -8011,
             "total": 0
           },
           "previous": {
@@ -1506,22 +1506,22 @@
           },
           "windows": {
             "d5": {
-              "foreign": -136722,
-              "inst": -55648,
-              "indiv": 113477,
-              "other_corp": 78894,
+              "foreign": -8784,
+              "inst": -13212,
+              "indiv": -48886,
+              "other_corp": 70883,
               "sessions": 5
             },
             "d20": {
-              "foreign": -2498607,
-              "inst": 2910453,
-              "indiv": -434684,
-              "other_corp": 22840,
+              "foreign": -2370669,
+              "inst": 2952889,
+              "indiv": -597047,
+              "other_corp": 14829,
               "sessions": 20
             }
           },
           "cumulative": {
-            "foreign": -1694418,
+            "foreign": -1566480,
             "since": "20260113"
           },
           "cum_series": {
@@ -1772,7 +1772,7 @@
               -1652082,
               -1651154,
               -1694418,
-              -1694418
+              -1566480
             ],
             "inst": [
               194528,
@@ -1896,7 +1896,7 @@
               1219370,
               1316246,
               981622,
-              981622
+              1024058
             ],
             "indiv": [
               17579,
@@ -2020,7 +2020,7 @@
               434859,
               337646,
               687246,
-              687246
+              524883
             ],
             "other_corp": [
               5555,
@@ -2144,13 +2144,13 @@
               -2138,
               -2729,
               25560,
-              25560
+              17549
             ],
             "latest": {
-              "foreign": -1694418,
-              "inst": 981622,
-              "indiv": 687246,
-              "other_corp": 25560
+              "foreign": -1566480,
+              "inst": 1024058,
+              "indiv": 524883,
+              "other_corp": 17549
             }
           }
         }
@@ -2729,8 +2729,8 @@
         },
         "investor_futures": {
           "available": true,
-          "source": "krx_web",
-          "source_file": null,
+          "source": "uploaded_excel",
+          "source_file": "nigseu-seonmul.xlsx",
           "scope_note": "업로드 자료 기준 · 월물 범위 미표기 · 순매수 거래대금(백만원)",
           "metric": "순매수 거래대금",
           "unit": "KRW_million",
@@ -2741,10 +2741,10 @@
           "sessions": 122,
           "current": {
             "date": "20260713",
-            "foreign": 0,
-            "inst": 0,
-            "indiv": 0,
-            "other_corp": 0,
+            "foreign": -662778,
+            "inst": 716722,
+            "indiv": -61948,
+            "other_corp": 8005,
             "total": 0
           },
           "previous": {
@@ -2757,22 +2757,22 @@
           },
           "windows": {
             "d5": {
-              "foreign": -1412007,
-              "inst": 1235962,
-              "indiv": 162187,
-              "other_corp": 13859,
+              "foreign": -2074785,
+              "inst": 1952684,
+              "indiv": 100239,
+              "other_corp": 21864,
               "sessions": 5
             },
             "d20": {
-              "foreign": -6032396,
-              "inst": 7106127,
-              "indiv": -1003496,
-              "other_corp": -70230,
+              "foreign": -6695174,
+              "inst": 7822849,
+              "indiv": -1065444,
+              "other_corp": -62225,
               "sessions": 20
             }
           },
           "cumulative": {
-            "foreign": -5003476,
+            "foreign": -5666254,
             "since": "20260113"
           },
           "cum_series": {
@@ -3023,7 +3023,7 @@
               -4877121,
               -4903603,
               -5003476,
-              -5003476
+              -5666254
             ],
             "inst": [
               36439,
@@ -3147,7 +3147,7 @@
               6300117,
               6381538,
               6373442,
-              6373442
+              7090164
             ],
             "indiv": [
               -14736,
@@ -3271,7 +3271,7 @@
               -1358423,
               -1419651,
               -1299630,
-              -1299630
+              -1361578
             ],
             "other_corp": [
               1068,
@@ -3395,13 +3395,13 @@
               -64555,
               -58266,
               -70318,
-              -70318
+              -62313
             ],
             "latest": {
-              "foreign": -5003476,
-              "inst": 6373442,
-              "indiv": -1299630,
-              "other_corp": -70318
+              "foreign": -5666254,
+              "inst": 7090164,
+              "indiv": -1361578,
+              "other_corp": -62313
             }
           }
         }
@@ -3741,7 +3741,7 @@
         },
         {
           "label": "투자자 수급(선물·외국인)",
-          "detail": "외국인 순매수대금 당일 +0·5일 -136,722(백만원) 방향 불일치 — 중립(보수적 제외)",
+          "detail": "외국인 순매수대금 당일 +127,938·5일 -8,784(백만원) 방향 불일치 — 중립(보수적 제외)",
           "dir": "neu"
         },
         {
@@ -3770,8 +3770,8 @@
     "skhynix": {
       "label": "SK하이닉스",
       "date": "20260713",
-      "stance": "중립",
-      "score": -0.3,
+      "stance": "약세우위",
+      "score": -1.0,
       "confidence": 90,
       "is_proxy": true,
       "basis": -16000,
@@ -3804,8 +3804,8 @@
         },
         {
           "label": "투자자 수급(선물·외국인)",
-          "detail": "외국인 순매수대금 당일 +0·5일 -1,412,007(백만원) 방향 불일치 — 중립(보수적 제외)",
-          "dir": "neu"
+          "detail": "외국인 순매수대금 당일 -662,778·5일 -2,074,785(백만원) 순매도 일관 — 약세(업로드 자료 기준 · 월물 범위 미표기 · 순매수 거래대금(백만원))",
+          "dir": "neg"
         },
         {
           "label": "옵션 투자자별 수급",
@@ -3813,13 +3813,13 @@
           "dir": "neu"
         }
       ],
-      "summary": "선물·옵션 종합 방향성: 중립 (백워데이션 · P/C 0.04 · ATM IV 130.8%(+14.09))",
+      "summary": "선물·옵션 종합 방향성: 약세우위 (백워데이션 · P/C 0.04 · ATM IV 130.8%(+14.09))",
       "direction_change": {
         "available": true,
-        "label": "약화",
-        "label_detail": "중립 전환",
-        "tone": 0,
-        "score_change": -2.4,
+        "label": "전환",
+        "label_detail": "약세 전환",
+        "tone": -1,
+        "score_change": -3.1,
         "previous": {
           "date": "20260710",
           "stance": "강세",
