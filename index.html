@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KOSPI 200 파생상품 트래커</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#141922; --panel2:#1b212d; --line:#252c3a;
+    --txt:#e6edf3; --muted:#8b98a9; --accent:#4c8dff; --up:#26a17b; --down:#f0616d;
+    --warn:#f5a623; --alert:#f0616d; --watch:#f5a623; --info:#4c8dff;
+    --fut:#4c8dff; --call:#26a17b; --put:#f0616d; --idx:#c792ea; --basis:#f5a623;
+    --pcval:#ffb347; --pcoi:#6b7a90; --pcvol:#8b98a9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 20px 60px}
+  header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:6px}
+  h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .cycle{color:var(--accent);font-weight:600}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;border:1px solid var(--line)}
+  .badge.live{color:var(--up);border-color:rgba(38,161,123,.4);background:rgba(38,161,123,.08)}
+  .badge.sample{color:var(--warn);border-color:rgba(245,166,35,.4);background:rgba(245,166,35,.08)}
+  .grid{display:grid;gap:14px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:16px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .kpi .label{color:var(--muted);font-size:12px;font-weight:500}
+  .kpi .val{font-size:24px;font-weight:700;margin-top:4px;letter-spacing:-.5px}
+  .kpi .chg{font-size:12px;margin-top:2px;color:var(--muted)}
+  .up{color:var(--up)} .down{color:var(--down)}
+  .narrative{background:linear-gradient(135deg,var(--panel2),var(--panel));border-left:3px solid var(--accent);font-size:14px;padding:14px 16px;border-radius:10px;margin-bottom:16px}
+  .charts{grid-template-columns:1fr 1fr}
+  @media(max-width:900px){.charts{grid-template-columns:1fr}}
+  .card h3{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .card h3 .hint{color:var(--muted);font-weight:400;font-size:12px}
+  .chart-box{position:relative;height:260px}
+  .alerts .item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .alerts .item:last-child{border-bottom:none}
+  .dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px}
+  .dot.alert{background:var(--alert)} .dot.watch{background:var(--watch)} .dot.info{background:var(--info)}
+  .alerts .t{font-weight:600;font-size:13px}
+  .alerts .d{color:var(--muted);font-size:12px;margin-top:2px}
+  .alerts .i{font-size:12.5px;margin-top:4px;color:#cdd6e0}
+  .empty{color:var(--muted);font-size:13px;padding:8px 0}
+  .foot{color:var(--muted);font-size:11.5px;margin-top:22px;text-align:center;line-height:1.7}
+  .lvl-tag{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:700;margin-left:6px;vertical-align:middle}
+  .lvl-alert{background:rgba(240,97,109,.15);color:var(--alert)}
+  .lvl-watch{background:rgba(245,166,35,.15);color:var(--watch)}
+  .lvl-info{background:rgba(76,141,255,.15);color:var(--info)}
+  .note{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.25);color:#f0c986;font-size:12px;padding:10px 14px;border-radius:10px;margin-bottom:16px}
+  /* directional insight */
+  .dir{margin-bottom:16px;padding:18px 20px}
+  .dir-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+  .dir-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .dir-stance{font-size:22px;font-weight:800;letter-spacing:-.4px}
+  .dir-conf{color:var(--muted);font-size:12px;margin-top:2px}
+  .dir-change{font-size:11.5px;margin-top:3px;color:var(--muted)}
+  .dir-change .chg-up{color:var(--up);font-weight:700}
+  .dir-change .chg-down{color:var(--down);font-weight:700}
+  .dir-change .chg-flat{color:var(--muted);font-weight:700}
+  .dir-deltas{font-size:11.5px;margin:4px 0 2px;color:var(--muted)}
+  .dir-deltas .d-up{color:var(--up)}
+  .dir-deltas .d-down{color:var(--down)}
+  .gauge{margin:16px 0 8px}
+  .gauge-track{position:relative;height:10px;border-radius:6px;background:var(--panel2);border:1px solid var(--line)}
+  .gauge-fill{position:absolute;top:0;height:100%;border-radius:6px;transition:all .4s}
+  .gauge-mid{position:absolute;top:-4px;left:50%;width:2px;height:18px;background:var(--muted);opacity:.6;z-index:2}
+  .gauge-knob{position:absolute;top:-5px;width:4px;height:20px;border-radius:3px;background:#fff;box-shadow:0 0 6px rgba(0,0,0,.7);transform:translateX(-2px);transition:left .4s;z-index:3}
+  .gauge-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:8px}
+  .dir-summary{font-size:13.5px;margin:12px 0 2px;color:#dbe3ec}
+  .sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin-top:14px}
+  @media(max-width:700px){.sig-grid{grid-template-columns:1fr}}
+  .sig{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;padding:8px 0;border-top:1px solid var(--line)}
+  .sig-bar{flex:none;width:52px;height:6px;border-radius:4px;background:var(--panel2);position:relative;margin-top:5px;overflow:hidden}
+  .sig-bar::before{content:"";position:absolute;top:0;left:50%;width:1px;height:100%;background:var(--line);z-index:1}
+  .sig-fill{position:absolute;top:0;height:100%;border-radius:2px}
+  .sig-txt{display:flex;flex-direction:column;gap:2px}
+  .sig-name{font-weight:600;color:var(--txt)}
+  .sig-reason{color:var(--muted)}
+  /* signal weight table */
+  .wtbl-cap{font-size:13px;font-weight:600;margin:16px 0 8px;color:#dbe3ec}
+  .wtbl-cap .hint{font-weight:400}
+  .wtbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .wtbl th,.wtbl td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line)}
+  .wtbl th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:none;border-bottom:1px solid var(--line)}
+  .wtbl td.num,.wtbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .wtbl tr:last-child td{border-bottom:none}
+  .wtbl .w-name{font-weight:600;color:var(--txt)}
+  .wtbl .wbar-wrap{display:inline-block;width:78px;height:7px;border-radius:4px;background:var(--panel2);vertical-align:middle;overflow:hidden;margin-right:8px}
+  .wtbl .wbar{display:block;height:100%;border-radius:4px;background:var(--fut)}
+  .wtbl .dir-tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600}
+  .wtbl .dir-bull{color:var(--up);background:rgba(46,204,113,.12)}
+  .wtbl .dir-bear{color:var(--down);background:rgba(231,76,60,.12)}
+  .wtbl .dir-neu{color:var(--muted);background:var(--panel2)}
+  .wtbl tfoot td{padding-top:9px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);border-bottom:none;line-height:1.6}
+  .wtbl .d-up{color:var(--up);font-weight:600}
+  .wtbl .d-down{color:var(--down);font-weight:600}
+  .wtbl .d-flat{color:var(--muted)}
+  .wtbl .d-new{color:var(--fut);font-weight:700;font-size:10.5px;letter-spacing:.5px}
+  .wtbl .flip-tag{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:10px;font-size:10.5px;font-weight:700;color:#ffcf6b;background:rgba(255,179,71,.16);border:1px solid rgba(255,179,71,.4)}
+  .wtbl tr.row-flip{background:rgba(255,179,71,.05)}
+  .wtbl tr.row-flip td{border-bottom-color:rgba(255,179,71,.25)}
+  @media(max-width:640px){.wtbl th,.wtbl td{padding:6px 5px;font-size:11px}.wtbl .wbar-wrap{width:36px}}
+  /* 방향 전환 강조 배너 */
+  .flip-banner{margin:2px 0 14px;padding:12px 14px;border-radius:11px;
+    background:linear-gradient(90deg,rgba(255,179,71,.14),rgba(255,179,71,.05));
+    border:1px solid rgba(255,179,71,.42);box-shadow:0 0 0 1px rgba(255,179,71,.06) inset}
+  .flip-banner .fb-head{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:#ffcf6b;margin-bottom:9px}
+  .flip-banner .fb-badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:9px;background:rgba(255,179,71,.22);border:1px solid rgba(255,179,71,.5);color:#ffdd99}
+  .flip-banner .fb-list{display:flex;flex-wrap:wrap;gap:8px}
+  .flip-banner .fb-item{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:9px;
+    background:var(--panel2);border:1px solid var(--line);font-size:12.5px}
+  .flip-banner .fb-name{font-weight:700;color:var(--txt)}
+  .flip-banner .fb-flow{color:var(--muted);font-size:11.5px}
+  .flip-banner .fb-flow .to-bull{color:var(--up);font-weight:700}
+  .flip-banner .fb-flow .to-bear{color:var(--down);font-weight:700}
+  .flip-banner .fb-flow .to-neu{color:var(--muted);font-weight:700}
+  .flip-banner .fb-flow .from{opacity:.7}
+  @media(max-width:640px){.flip-banner .fb-list{flex-direction:column;gap:6px}.flip-banner .fb-item{width:100%}}
+  /* investor flow layer */
+  :root{ --foreign:#4c8dff; --inst:#f5a623; --indiv:#8b98a9; --other:#c678dd; }
+  .inv-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:6px}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px}
+  .seg-btn{background:transparent;border:none;color:var(--muted);font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;transition:all .15s;font-family:inherit}
+  .seg-btn:hover{color:var(--txt)}
+  .seg-btn.active{background:var(--accent);color:#fff}
+  .inv-summary{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 4px}
+  .inv-chip{display:flex;flex-direction:column;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 14px;min-width:150px}
+  .inv-chip .who{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+  .inv-chip .who .sw{width:9px;height:9px;border-radius:2px;flex:none}
+  .inv-chip .amt{font-size:18px;font-weight:700;letter-spacing:-.3px}
+  .inv-cap{font-size:13px;font-weight:600;margin:6px 0 8px;color:#dbe3ec}
+  .stk-insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .stk-insight-grid>*{min-width:0}
+  @media(max-width:700px){.stk-insight-grid{grid-template-columns:1fr}}
+  .stk-ins{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .stk-ins .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+  .stk-ins .name{font-size:16px;font-weight:700;letter-spacing:-.3px}
+  .stk-ins .stance{font-size:14px;font-weight:800;padding:4px 12px;border-radius:999px}
+  .stk-ins .st-bull{color:#0a1f14;background:#4cc38a}
+  .stk-ins .st-bear{color:#2a0d0d;background:#ff6b6b}
+  .stk-ins .st-neu{color:#e6edf5;background:#3a4658}
+  .stk-ins .sum{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  .stk-ins .sig{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .stk-ins .sig .lb{font-weight:600;color:#c4cddb;flex:none;min-width:96px}
+  .stk-ins .sig .dt{color:#aeb8c6}
+  .stk-ins .sig .dot{width:8px;height:8px;border-radius:50%;flex:none;margin-top:5px}
+  .dot-pos{background:#4cc38a}.dot-neg{background:#ff6b6b}.dot-neu{background:#8792a3}
+  .stk-ins .stance .conf{display:inline-block;margin-left:8px;font-size:10.5px;font-weight:700;opacity:.85;vertical-align:middle}
+  .stk-ins .name .proxy-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700;color:#ffcf6b;background:rgba(255,179,71,.16);border:1px solid rgba(255,179,71,.4);vertical-align:middle}
+  .pos-block{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
+  .pos-cap{font-size:11.5px;font-weight:700;color:#c4cddb;margin-bottom:6px}
+  .pos-row{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;color:#aeb8c6}
+  .pos-row .pos-lb{color:#8b98a9;flex:none}
+  .pos-row .pos-v{text-align:right;font-variant-numeric:tabular-nums}
+  .pos-row .pos-v em{font-style:normal;color:#8b98a9}
+  .pos-row.pos-na .pos-v{color:#6b7a90;font-size:11.5px}
+  /* 업로드 엑셀 기반 선물 투자자별 순매수 표 */
+  .inv-fut{margin-top:10px}
+  .inv-cap{font-size:11.5px;font-weight:700;color:#c4cddb;margin-bottom:5px}
+  .inv-tbl{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+  .inv-tbl th{color:#8b98a9;font-weight:600;text-align:right;padding:2px 4px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .inv-tbl th:first-child{text-align:left}
+  .inv-tbl td{text-align:right;padding:2px 4px;color:#aeb8c6}
+  .inv-tbl td.iv-lb{text-align:left;color:#8b98a9}
+  .inv-tbl td.iv-pos,.inv-cum em.iv-pos{color:#4cc38a}
+  .inv-tbl td.iv-neg,.inv-cum em.iv-neg{color:#ff8a8a}
+  .inv-cum{font-size:11.5px;color:#8b98a9;margin-top:5px}
+  .inv-cum em{font-style:normal;font-weight:700}
+  .inv-note{font-size:10.5px;color:#7a8598;margin-top:5px;line-height:1.5}
+  .iv-fresh{color:#4cc38a} .iv-stale{color:#f0c986}
+  /* 투자자별 누적 순매수 거래대금 스몰멀티플 (외국인/기관/개인/기타법인) */
+  .cum-sm{margin-top:12px}
+  .cum-sm-hd{font-size:11.5px;font-weight:700;color:#c4cddb;margin-bottom:2px}
+  .cum-sm-note{font-size:10px;color:#7a8598;margin-bottom:8px;line-height:1.5}
+  .cum-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .cum-cell{min-width:0;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px}
+  .cum-cell .hd{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:4px}
+  .cum-cell .nm{font-size:11px;font-weight:700}
+  .cum-cell .lv{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+  .cum-cell .cv{position:relative;height:96px;min-width:0}
+  .cum-cell .cv canvas{max-width:100%}
+  @media(max-width:560px){ .cum-grid{grid-template-columns:1fr} }
+  .stk-method{margin-top:10px;font-size:11px;line-height:1.6;color:#8b98a9;background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px}
+  .stk-method .lim{color:#f0c986}
+  /* IA 섹션 구분 헤딩 */
+  .section-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;margin:30px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--txt)}
+  .section-head::before{content:"";align-self:center;flex:none;width:4px;height:20px;border-radius:3px;background:var(--accent)}
+  .section-head.stocks::before{background:#5da9ff}
+  .section-head .sh-sub{font-size:12px;font-weight:500;color:var(--muted)}
+  .section-head:first-of-type{margin-top:14px}
+  /* 현재/전일 방향 비교 */
+  .dir-cmp{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0 12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02)}
+  .dir-cmp .dc-cell{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .dir-cmp .dc-lb{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.2px}
+  .dir-cmp .dc-val{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .dir-cmp .dc-meta{font-size:10.5px;color:#8b98a9;font-variant-numeric:tabular-nums}
+  .dir-cmp .dc-na{font-size:12.5px;font-weight:700;color:#6b7a90}
+  .stance-mini{font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .stance-mini.st-bull{color:#0a1f14;background:#4cc38a}
+  .stance-mini.st-bear{color:#2a0d0d;background:#ff6b6b}
+  .stance-mini.st-neu{color:#e6edf5;background:#3a4658}
+  .chg-badge{font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap;border:1px solid var(--line)}
+  .chg-badge.chg-up{color:#4cc38a;background:rgba(76,195,138,.12);border-color:rgba(76,195,138,.4)}
+  .chg-badge.chg-down{color:#ff8a8a;background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.4)}
+  .chg-badge.chg-flip{color:#ffcf6b;background:rgba(255,179,71,.14);border-color:rgba(255,179,71,.45)}
+  .chg-badge.chg-flat{color:#aeb8c6;background:var(--panel2)}
+  @media(max-width:520px){.dir-cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>KOSPI 200 파생상품 트래커</h1>
+      <div class="sub">미결제약정 · 순매매 흐름 · 베이시스 · 콜/풋 비율 &nbsp;|&nbsp; 만기 기준 사이클: <span class="cycle" id="cycle">—</span></div>
+    </div>
+    <div style="text-align:right">
+      <span class="badge" id="srcBadge">로딩…</span>
+      <div class="sub" id="asof" style="margin-top:6px"></div>
+    </div>
+  </header>
+
+  <div id="dataNote" class="note" style="display:none"></div>
+  <div class="narrative" id="narrative">데이터를 불러오는 중…</div>
+
+  <h2 class="section-head" id="secKospi">📊 KOSPI200 종합 분석 <span class="sh-sub">— 지수 파생 방향성·수급·베이시스·콜/풋</span></h2>
+
+  <div class="card dir" id="dirCard" style="display:none">
+    <div class="dir-head">
+      <div class="dir-title">🧭 방향성 인사이트 <span class="hint">— 파생 신호 종합 강세/약세 판단</span></div>
+      <div style="text-align:right">
+        <div class="dir-stance" id="dirStance">—</div>
+        <div class="dir-conf" id="dirConf"></div>
+        <div class="dir-change" id="dirChange"></div>
+      </div>
+    </div>
+    <div class="flip-banner" id="dirFlipBanner" style="display:none"></div>
+    <div class="gauge">
+      <div class="gauge-track"><div class="gauge-fill" id="dirFill"></div><div class="gauge-mid"></div><div class="gauge-knob" id="dirKnob" style="left:50%"></div></div>
+      <div class="gauge-labels"><span>약세 −1.0</span><span>중립 0</span><span>강세 +1.0</span></div>
+    </div>
+    <div class="dir-summary" id="dirSummary"></div>
+    <div class="dir-deltas" id="dirDeltas"></div>
+    <div class="wtbl-cap">⚖️ 신호별 가중치 <span class="hint">— 각 신호가 종합 스코어에 기여하는 비중(큰 값일수록 영향 큼)</span></div>
+    <div id="dirWeights"></div>
+    <div class="sig-grid" id="dirSignals"></div>
+  </div>
+
+  <div class="grid kpis" id="kpis"></div>
+
+  <div class="card alerts" style="margin-bottom:16px">
+    <h3>⚠️ 알림 <span class="hint">— 미결제약정 급변, 콜/풋 비율 이상, 베이시스 레짐 신호</span></h3>
+    <div id="alerts"></div>
+  </div>
+
+  <!-- 거래대금 P/C — 핵심 동행 지표(가장 상단에 강조) -->
+  <div class="card" id="pcvalCard" style="margin-bottom:16px;border-color:rgba(255,179,71,.35);background:linear-gradient(135deg,rgba(255,179,71,.06),var(--panel))">
+    <div class="inv-head">
+      <h3 style="margin-bottom:0">💰 거래대금 풋/콜 비율 <span class="hint">— 옵션 거래대금(억원) 기준 동행 지표 · 설명력 최상위</span></h3>
+      <div id="pcvalHead" style="text-align:right"></div>
+    </div>
+    <div class="grid charts" style="margin-top:6px">
+      <div>
+        <div class="inv-cap">거래대금 풋/콜 비율 <span class="hint">(풋 거래대금 ÷ 콜 거래대금)</span></div>
+        <div class="chart-box"><canvas id="pcVal"></canvas></div>
+      </div>
+      <div>
+        <div class="inv-cap">콜 · 풋 거래대금 <span class="hint">(일별, 억원)</span></div>
+        <div class="chart-box"><canvas id="valAmt"></canvas></div>
+      </div>
+    </div>
+    <div class="foot" id="pcvalNote" style="margin-top:10px;text-align:left"></div>
+  </div>
+
+  <!-- 투자자별 수급 레이어 (거래대금 P/C 바로 다음 배치) -->
+  <div class="card inv" id="invCard" style="display:none;margin-bottom:16px">
+    <div class="inv-head">
+      <h3 style="margin-bottom:0">👥 투자자별 수급 <span class="hint">— 만기 이후 외국인·기관·개인 순매수금액 (억원)</span></h3>
+      <div class="seg" id="invSeg">
+        <button data-p="fut" class="seg-btn active">선물</button>
+        <button data-p="call" class="seg-btn">콜옵션</button>
+        <button data-p="put" class="seg-btn">풋옵션</button>
+      </div>
+    </div>
+    <div class="inv-summary" id="invSummary"></div>
+    <div class="grid charts" style="margin-top:6px">
+      <div>
+        <div class="inv-cap">누적 순매수금액 추이 <span class="hint">(만기 이후 누적, 억원)</span></div>
+        <div class="chart-box"><canvas id="invCum"></canvas></div>
+      </div>
+      <div>
+        <div class="inv-cap">일별 순매수금액 <span class="hint">(당일 순매수금액, 억원)</span></div>
+        <div class="chart-box"><canvas id="invDaily"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid charts">
+    <div class="card">
+      <h3>미결제약정 변화 <span class="hint">(선물·콜·풋, 일별 증감)</span></h3>
+      <div class="chart-box"><canvas id="oiChg"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>미결제약정 누적 추이 <span class="hint">(만기 이후 순증감)</span></h3>
+      <div class="chart-box"><canvas id="oiCum"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>베이시스 <span class="hint">(선물 − 현물, 지수포인트)</span></h3>
+      <div class="chart-box"><canvas id="basis"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>풋/콜 비율 (참고) <span class="hint">(미결제약정·거래량 기준 — 거래대금 P/C 대비 보조 지표)</span></h3>
+      <div class="chart-box"><canvas id="pcr"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>지수 vs 선물 <span class="hint">(종가 추이)</span></h3>
+      <div class="chart-box"><canvas id="px"></canvas></div>
+    </div>
+  </div>
+
+  <h2 class="section-head stocks" id="secStocks">📈 개별종목 파생 분석 <span class="sh-sub">— 삼성전자 → SK하이닉스 순 · 투자자별 수급 미제공 · 방향성 프록시</span></h2>
+
+  <!-- 개별종목 인사이트 -->
+  <div class="card" id="stkInsightCard" style="display:none;margin-bottom:16px;border-color:rgba(93,169,255,.30);background:linear-gradient(135deg,rgba(93,169,255,.07),var(--panel))">
+    <div class="inv-head">
+      <h3 style="margin-bottom:0">💡 개별종목 인사이트 <span class="hint">— 삼성전자·SK하이닉스 선물·옵션 종합 방향성 (투자자별 수급 미제공 · 방향성 프록시)</span></h3>
+    </div>
+    <div class="stk-insight-grid" id="stkInsightGrid" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card" id="stkCard" style="display:none;margin-bottom:16px;border-color:rgba(93,169,255,.30);background:linear-gradient(135deg,rgba(93,169,255,.06),var(--panel))">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h3 style="margin-bottom:0">📈 개별주식 선물·옵션 <span class="hint">— 삼성전자·SK하이닉스 시세·OI·콜/풋 · 계약월별(비분기월 2+분기월 4) 둘째 목요일 만기 (투자자 수급 미포함)</span></h3>
+      <div class="seg" id="stkSeg"></div>
+    </div>
+    <div class="inv-summary" id="stkSummary" style="margin-top:10px"></div>
+    <div class="grid charts" style="margin-top:6px">
+      <div class="card" style="background:var(--panel2)">
+        <h3>선물 종가 vs 현물 <span class="hint">(원)</span></h3>
+        <div class="chart-box"><canvas id="stkPx"></canvas></div>
+      </div>
+      <div class="card" style="background:var(--panel2)">
+        <h3>선물 미결제약정 추이 <span class="hint">(계약)</span></h3>
+        <div class="chart-box"><canvas id="stkOi"></canvas></div>
+      </div>
+    </div>
+    <div class="opt-cap" style="margin-top:14px;font-weight:600;color:var(--muted);font-size:13px">🎯 개별주식옵션 <span class="hint">— 전체 월물 콜/풋 미결제약정·거래대금 (P/C = 풋÷콜)</span></div>
+    <div class="inv-summary" id="stkOptSummary" style="margin-top:8px"></div>
+    <div class="grid charts" style="margin-top:6px">
+      <div class="card" style="background:var(--panel2)">
+        <h3>콜·풋 미결제약정 <span class="hint">(계약)</span></h3>
+        <div class="chart-box"><canvas id="stkOptOi"></canvas></div>
+      </div>
+      <div class="card" style="background:var(--panel2)">
+        <h3>옵션 풋/콜 비율 <span class="hint">(OI · 거래대금 기준)</span></h3>
+        <div class="chart-box"><canvas id="stkOptPc"></canvas></div>
+      </div>
+    </div>
+    <div class="opt-cap opt-cap-iv" style="margin-top:14px;font-weight:600;color:var(--muted);font-size:13px">🌡️ 내재변동성(ATM IV) <span class="hint">— 근월물 등가격 기준 · KRX 제공 연율화 %(전체월물 가중치 아님)</span></div>
+    <div class="inv-summary" id="stkIvSummary" style="margin-top:8px"></div>
+    <div class="grid charts" style="margin-top:6px">
+      <div class="card opt-cap-iv" style="background:var(--panel2);grid-column:1/-1">
+        <h3>ATM 내재변동성 추이 <span class="hint">(중간·콜·풋, 연율화 %)</span></h3>
+        <div class="chart-box"><canvas id="stkOptIv"></canvas></div>
+      </div>
+    </div>
+    <div class="foot" id="stkNote" style="margin-top:10px;text-align:left"></div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+<script src="app.js?v=20260714p"></script>
+</body>
+</html>
