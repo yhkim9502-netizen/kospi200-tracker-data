@@ -6,7 +6,7 @@
     "as_of": "20260713",
     "calendar_today": "20260714",
     "source": "krx_live",
-    "generated_at": "2026-07-14T05:12:57",
+    "generated_at": "2026-07-14T06:35:58",
     "rows": 2
   },
   "series": {
@@ -752,6 +752,10 @@
         "rollover": [
           false,
           false
+        ],
+        "all_oi": [
+          5906875.0,
+          5746297.0
         ]
       },
       "latest": {
@@ -762,6 +766,30 @@
         "oi": 5401362.0,
         "oi_chg": -172462.0,
         "val_eok": 160620.2819685
+      },
+      "positioning": {
+        "front": {
+          "oi": 5401362.0,
+          "oi_chg": -172462,
+          "month": "202608"
+        },
+        "all_month": {
+          "available": true,
+          "oi": 5746297.0,
+          "oi_chg": -160578,
+          "n_contracts": 6,
+          "next_oi": 344751.0
+        },
+        "rollover_adjusted": {
+          "available": true,
+          "net_oi_chg": -160578,
+          "roll_transfer": -11884
+        },
+        "investor_futures": {
+          "available": false,
+          "reason": "KRX Open API 개별종목 선물·옵션 일별매매정보는 투자자별(외국인/기관/개인) 순매수·순매도를 제공하지 않습니다.",
+          "note": "지수(KOSPI200) 파생상품에는 투자자동향 소스가 있으나 개별종목 단위 공개 소스가 없어, 방향성은 OI·거래대금·베이시스·IV 기반의 프록시로만 산출합니다."
+        }
       },
       "options": {
         "series": {
@@ -831,6 +859,11 @@
           "strike_lo": 250000.0,
           "strike_hi": 260000.0,
           "note": "보간"
+        },
+        "investor_options": {
+          "available": false,
+          "reason": "KRX Open API 개별종목 선물·옵션 일별매매정보는 투자자별(외국인/기관/개인) 순매수·순매도를 제공하지 않습니다.",
+          "note": "지수(KOSPI200) 파생상품에는 투자자동향 소스가 있으나 개별종목 단위 공개 소스가 없어, 방향성은 OI·거래대금·베이시스·IV 기반의 프록시로만 산출합니다."
         }
       }
     },
@@ -877,6 +910,10 @@
         "rollover": [
           false,
           false
+        ],
+        "all_oi": [
+          1640207.0,
+          1560044.0
         ]
       },
       "latest": {
@@ -887,6 +924,30 @@
         "oi": 1494850.0,
         "oi_chg": -85864.0,
         "val_eok": 316475.9298802
+      },
+      "positioning": {
+        "front": {
+          "oi": 1494850.0,
+          "oi_chg": -85864,
+          "month": "202608"
+        },
+        "all_month": {
+          "available": true,
+          "oi": 1560044.0,
+          "oi_chg": -80163,
+          "n_contracts": 6,
+          "next_oi": 65192.0
+        },
+        "rollover_adjusted": {
+          "available": true,
+          "net_oi_chg": -80163,
+          "roll_transfer": -5701
+        },
+        "investor_futures": {
+          "available": false,
+          "reason": "KRX Open API 개별종목 선물·옵션 일별매매정보는 투자자별(외국인/기관/개인) 순매수·순매도를 제공하지 않습니다.",
+          "note": "지수(KOSPI200) 파생상품에는 투자자동향 소스가 있으나 개별종목 단위 공개 소스가 없어, 방향성은 OI·거래대금·베이시스·IV 기반의 프록시로만 산출합니다."
+        }
       },
       "options": {
         "series": {
@@ -956,6 +1017,11 @@
           "strike_lo": 1800000.0,
           "strike_hi": 1850000.0,
           "note": "보간"
+        },
+        "investor_options": {
+          "available": false,
+          "reason": "KRX Open API 개별종목 선물·옵션 일별매매정보는 투자자별(외국인/기관/개인) 순매수·순매도를 제공하지 않습니다.",
+          "note": "지수(KOSPI200) 파생상품에는 투자자동향 소스가 있으나 개별종목 단위 공개 소스가 없어, 방향성은 OI·거래대금·베이시스·IV 기반의 프록시로만 산출합니다."
         }
       }
     }
@@ -965,8 +1031,11 @@
       "label": "삼성전자",
       "stance": "약세",
       "score": -2.6,
+      "confidence": 80,
+      "is_proxy": true,
       "basis": -1000,
-      "oi_chg": -172462,
+      "oi_chg": -160578,
+      "oi_adjusted": true,
       "pc_oi": 2.64,
       "atm_iv_mid": 93.048,
       "atm_iv_chg": 5.2,
@@ -978,8 +1047,8 @@
           "dir": "neg"
         },
         {
-          "label": "선물 OI",
-          "detail": "미결제약정 감소(-172,462) — 청산",
+          "label": "선물 OI(롤오버조정)",
+          "detail": "순 미결제약정 감소(-160,578) — 청산 · 전체 상장월물 합산",
           "dir": "neg"
         },
         {
@@ -991,16 +1060,26 @@
           "label": "ATM IV(근월물)",
           "detail": "93.0%, 전일 +5.2%p · 풋 스큐(방어적)",
           "dir": "neg"
+        },
+        {
+          "label": "투자자 수급",
+          "detail": "개별종목 선물·옵션 투자자별(외국인/기관/개인) 순매수 미제공 — 방향성 산정에서 제외",
+          "dir": "neu"
         }
       ],
-      "summary": "선물·옵션 종합 방향성: 약세 (백워데이션 · P/C 2.64 · ATM IV 93.0%(+5.2))"
+      "summary": "선물·옵션 종합 방향성: 약세 (백워데이션 · P/C 2.64 · ATM IV 93.0%(+5.2))",
+      "method": "프록시(delta-equivalent 아님): 베이시스·롤오버조정 순OI·옵션 P/C·ATM 스큐를 가중합. 옵션 P/C는 수준 지표로만 사용하며 풋 OI 증가 단독을 약세로 보지 않음.",
+      "limitations": "KRX 개별종목 선물·옵션은 투자자별 순매수와 스트라이크별 그릭스를 제공하지 않아 델타환산 포지션을 계산할 수 없음. 방향성은 참고용 프록시이며, 전체 월물 합산 데이터가 없는 날짜는 롤오버 미조정(신뢰도 감점)으로 표기됨."
     },
     "skhynix": {
       "label": "SK하이닉스",
       "stance": "중립",
       "score": -0.3,
+      "confidence": 80,
+      "is_proxy": true,
       "basis": -16000,
-      "oi_chg": -85864,
+      "oi_chg": -80163,
+      "oi_adjusted": true,
       "pc_oi": 0.04,
       "atm_iv_mid": 130.805,
       "atm_iv_chg": 14.09,
@@ -1012,8 +1091,8 @@
           "dir": "neg"
         },
         {
-          "label": "선물 OI",
-          "detail": "미결제약정 감소(-85,864) — 청산",
+          "label": "선물 OI(롤오버조정)",
+          "detail": "순 미결제약정 감소(-80,163) — 청산 · 전체 상장월물 합산",
           "dir": "neg"
         },
         {
@@ -1025,9 +1104,16 @@
           "label": "ATM IV(근월물)",
           "detail": "130.8%, 전일 +14.09%p · 스큐 중립 (변동성 지표)",
           "dir": "neu"
+        },
+        {
+          "label": "투자자 수급",
+          "detail": "개별종목 선물·옵션 투자자별(외국인/기관/개인) 순매수 미제공 — 방향성 산정에서 제외",
+          "dir": "neu"
         }
       ],
-      "summary": "선물·옵션 종합 방향성: 중립 (백워데이션 · P/C 0.04 · ATM IV 130.8%(+14.09))"
+      "summary": "선물·옵션 종합 방향성: 중립 (백워데이션 · P/C 0.04 · ATM IV 130.8%(+14.09))",
+      "method": "프록시(delta-equivalent 아님): 베이시스·롤오버조정 순OI·옵션 P/C·ATM 스큐를 가중합. 옵션 P/C는 수준 지표로만 사용하며 풋 OI 증가 단독을 약세로 보지 않음.",
+      "limitations": "KRX 개별종목 선물·옵션은 투자자별 순매수와 스트라이크별 그릭스를 제공하지 않아 델타환산 포지션을 계산할 수 없음. 방향성은 참고용 프록시이며, 전체 월물 합산 데이터가 없는 날짜는 롤오버 미조정(신뢰도 감점)으로 표기됨."
     }
   }
 }
