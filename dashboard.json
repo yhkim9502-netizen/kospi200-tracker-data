@@ -4,9 +4,9 @@
     "next_expiry": "20260813",
     "today": "20260716",
     "as_of": "20260716",
-    "calendar_today": "20260717",
+    "calendar_today": "20260720",
     "source": "krx_live",
-    "generated_at": "2026-07-17T09:03:10+09:00",
+    "generated_at": "2026-07-20T11:29:31+09:00",
     "update_schedule": "next_business_day_08:00_KST",
     "cycles": {
       "index_futures": {
