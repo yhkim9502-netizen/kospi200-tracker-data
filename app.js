@@ -207,27 +207,35 @@ function investorFuturesHTML(invF, key) {
     + `</div>`;
 }
 
-// 투자자별 누적 순매수 거래대금 스몰멀티플 컨테이너(캔버스는 이후 Chart.js로 렌더).
-// 4개 패널: 외국인/기관 합계/개인/기타법인. 각 패널 최신 누적값 + 단위 라벨 표기.
+// 투자자별 누적 순매수 거래대금 선택형 차트.
+// 종목별로 외국인/기관/개인/기타법인 중 하나를 골라 큰 차트로 확인한다.
 function cumSmallMultiplesHTML(invF, key, ul) {
   const cs = invF.cum_series;
   if (!cs || !key || !(cs.dates && cs.dates.length)) return "";
   const lc = cs.latest || {};
   const since = fmtD(String(cs.dates[0])), until = fmtD(String(cs.dates[cs.dates.length - 1]));
-  const cells = CUM_INV.map(([nm, ik]) => {
-    const lv = lc[ik];
-    const cls = lv > 0 ? "iv-pos" : lv < 0 ? "iv-neg" : "";
-    return `<div class="cum-cell"><div class="hd">`
-      + `<span class="nm">${nm}</span>`
-      + `<span class="lv ${cls}">${sign(lv)} ${ul}</span></div>`
-      + `<div class="cv"><canvas id="cum-${key}-${ik}" `
-      + `role="img" aria-label="${nm} 누적 순매수 거래대금 추이(${ul}), 최신 ${sign(lv)}"></canvas></div></div>`;
+  const active = _cumSelected[key] || "foreign";
+  const tabs = CUM_INV.map(([nm, ik]) => {
+    const selected = ik === active;
+    return `<button type="button" class="cum-tab${selected ? " active" : ""}" `
+      + `data-cum-key="${key}" data-cum-investor="${ik}" role="tab" `
+      + `aria-selected="${selected}" aria-controls="cum-${key}">${nm}</button>`;
   }).join("");
-  return `<div class="cum-sm"><div class="cum-sm-hd">투자자별 누적 순매수 거래대금 추이 (${ul})</div>`
-    + `<div class="cum-sm-note">${since}~${until} 일별 순매수 거래대금의 누적합. `
-    + `4개 패널은 각각 <b>독립 y축</b>(스케일 상이)이며 점선은 0 기준선입니다 — `
-    + `패널 간 기울기·크기를 직접 비교하지 말고 각 라벨과 값을 확인하세요.</div>`
-    + `<div class="cum-grid">${cells}</div></div>`;
+  const activeRow = CUM_INV.find(([, ik]) => ik === active) || CUM_INV[0];
+  const activeName = activeRow[0], activeKey = activeRow[1];
+  const lv = lc[activeKey];
+  const cls = lv > 0 ? "iv-pos" : lv < 0 ? "iv-neg" : "";
+  return `<div class="cum-sm" data-cum-chart="${key}">`
+    + `<div class="cum-sm-hd">투자자별 누적 순매수 거래대금 추이 (${ul})</div>`
+    + `<div class="cum-sm-note">${since}~${until} 일별 누적합입니다. `
+    + `아래 주체를 눌러 선택한 그래프를 크게 확인하세요. 점선은 0 기준선입니다.</div>`
+    + `<div class="cum-tabs" role="tablist" aria-label="투자자 선택">${tabs}</div>`
+    + `<div class="cum-cell cum-focus"><div class="hd">`
+    + `<span class="nm" id="cum-name-${key}">${activeName}</span>`
+    + `<span class="lv ${cls}" id="cum-value-${key}">${sign(lv)} ${ul}</span></div>`
+    + `<div class="cv"><canvas id="cum-${key}" role="img" `
+    + `aria-label="${activeName} 누적 순매수 거래대금 추이(${ul}), 최신 ${sign(lv)}"></canvas></div>`
+    + `</div></div>`;
 }
 
 function renderStockInsights(si, sf) {
@@ -267,38 +275,69 @@ function renderStockInsights(si, sf) {
   });
 }
 
-// 투자자별(외국인/기관/개인/기타법인) 누적 순매수 거래대금 스몰멀티플.
-// 각 패널은 독립 y축(스케일 상이) — 슬로프/크기 패널 간 직접 비교 금지(라벨 참조).
+// 투자자별 누적 순매수 거래대금 선택형 차트.
+// 종목마다 선택 상태와 Chart.js 인스턴스를 독립적으로 유지한다.
 const _cumCharts = {};
+const _cumSelected = {};
 const CUM_INV = [["외국인", "foreign", "--foreign"], ["기관 합계", "inst", "--inst"],
                  ["개인", "indiv", "--indiv"], ["기타법인", "other_corp", "--other"]];
+
 function drawInvestorCumCharts(key, cs) {
-  const labels = (cs.dates || []).map(d => fmtD(String(d)));
+  const wrap = document.querySelector(`[data-cum-chart="${key}"]`);
+  if (!wrap) return;
+  wrap.querySelectorAll(".cum-tab").forEach(btn => {
+    btn.addEventListener("click", () => selectInvestorCum(key, cs, btn.dataset.cumInvestor));
+  });
+  selectInvestorCum(key, cs, _cumSelected[key] || "foreign");
+}
+
+function selectInvestorCum(key, cs, investorKey) {
+  const row = CUM_INV.find(([, ik]) => ik === investorKey) || CUM_INV[0];
+  const [nm, ik, cvar] = row;
+  _cumSelected[key] = ik;
+  const wrap = document.querySelector(`[data-cum-chart="${key}"]`);
+  const el = document.getElementById(`cum-${key}`);
+  if (!wrap || !el) return;
+
+  wrap.querySelectorAll(".cum-tab").forEach(btn => {
+    const selected = btn.dataset.cumInvestor === ik;
+    btn.classList.toggle("active", selected);
+    btn.setAttribute("aria-selected", String(selected));
+  });
+
+  const values = cs[ik] || [];
+  const lc = cs.latest || {};
+  const lv = lc[ik] != null ? lc[ik] : [...values].reverse().find(v => v != null);
   const ul = cs.unit_label || "백만원";
-  CUM_INV.forEach(([nm, ik, cvar]) => {
-    const el = document.getElementById(`cum-${key}-${ik}`);
-    if (!el) return;
-    const color = C(cvar) || C("--accent");
-    if (_cumCharts[el.id]) _cumCharts[el.id].destroy();
-    const opts = baseOpts({ y: { grid: { color: COL.line },
-        ticks: { maxTicksLimit: 4, font: { size: 9 },
-                 callback: v => Number(v).toLocaleString("ko-KR", { notation: "compact" }) },
-        title: { display: true, text: ul, font: { size: 9 } } } }, false);
-    opts.scales.x.ticks = { maxRotation: 0, autoSkip: true, maxTicksLimit: 4, font: { size: 9 } };
-    opts.plugins.tooltip.callbacks = {
-      title: items => `${nm} · ${items[0].label}`,
-      label: ctx => `누적 ${sign(ctx.parsed.y)} ${ul}` };
-    _cumCharts[el.id] = new Chart(el, {
-      type: "line",
-      data: { labels, datasets: [
-        // 0 기준선 (누적이 0 위/아래인지 시각적 기준)
-        { label: "0", data: labels.map(() => 0), borderColor: COL.muted,
-          borderWidth: 1, borderDash: [4, 4], pointRadius: 0, fill: false, tension: 0 },
-        { label: nm, data: cs[ik] || [], borderColor: color, backgroundColor: color + "22",
-          borderWidth: 2, pointRadius: 0, fill: true, tension: .25 },
-      ] },
-      options: opts,
-    });
+  const nameEl = document.getElementById(`cum-name-${key}`);
+  const valueEl = document.getElementById(`cum-value-${key}`);
+  if (nameEl) nameEl.textContent = nm;
+  if (valueEl) {
+    valueEl.textContent = `${sign(lv)} ${ul}`;
+    valueEl.className = `lv ${lv > 0 ? "iv-pos" : lv < 0 ? "iv-neg" : ""}`;
+  }
+  el.setAttribute("aria-label", `${nm} 누적 순매수 거래대금 추이(${ul}), 최신 ${sign(lv)}`);
+
+  const labels = (cs.dates || []).map(d => fmtD(String(d)));
+  const color = C(cvar) || C("--accent");
+  if (_cumCharts[key]) _cumCharts[key].destroy();
+  const opts = baseOpts({ y: { grid: { color: COL.line },
+      ticks: { maxTicksLimit: 6, font: { size: 10 },
+               callback: v => Number(v).toLocaleString("ko-KR", { notation: "compact" }) },
+      title: { display: true, text: ul, font: { size: 10 } } } }, false);
+  opts.scales.x.ticks = { maxRotation: 0, autoSkip: true, maxTicksLimit: 7, font: { size: 10 } };
+  opts.plugins.tooltip.callbacks = {
+    title: items => `${nm} · ${items[0].label}`,
+    label: ctx => `누적 ${sign(ctx.parsed.y)} ${ul}` };
+  _cumCharts[key] = new Chart(el, {
+    type: "line",
+    data: { labels, datasets: [
+      { label: "0", data: labels.map(() => 0), borderColor: COL.muted,
+        borderWidth: 1, borderDash: [4, 4], pointRadius: 0, fill: false, tension: 0 },
+      { label: nm, data: values, borderColor: color, backgroundColor: color + "22",
+        borderWidth: 2.5, pointRadius: 0, fill: true, tension: .25 },
+    ] },
+    options: opts,
   });
 }
 
