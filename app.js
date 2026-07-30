@@ -319,6 +319,13 @@ function selectInvestorCum(key, cs, investorKey) {
   el.setAttribute("aria-label", `${nm} 누적 순매수 거래대금 추이(${ul}), 최신 ${sign(lv)}`);
 
   const labels = (cs.dates || []).map(d => fmtD(String(d)));
+  // 누적 시계열의 전일 차분으로 각 날짜의 실제 당일 순매수 금액을 계산한다.
+  // 첫 관측일은 누적 시작점이므로 해당 누적값 자체를 당일 금액으로 사용한다.
+  const dailyValues = values.map((v, i) => {
+    if (v == null) return null;
+    if (i === 0) return v;
+    return values[i - 1] == null ? null : v - values[i - 1];
+  });
   const color = C(cvar) || C("--accent");
   if (_cumCharts[key]) _cumCharts[key].destroy();
   const opts = baseOpts({ y: { grid: { color: COL.line },
@@ -328,11 +335,13 @@ function selectInvestorCum(key, cs, investorKey) {
   opts.scales.x.ticks = { maxRotation: 0, autoSkip: true, maxTicksLimit: 7, font: { size: 10 } };
   opts.plugins.tooltip.callbacks = {
     title: items => `${nm} · ${items[0].label}`,
-    label: ctx => `누적 ${sign(ctx.parsed.y)} ${ul}` };
+    label: ctx => ctx.datasetIndex === 0
+      ? `당일 ${sign(dailyValues[ctx.dataIndex])} ${ul}`
+      : `누적 ${sign(ctx.parsed.y)} ${ul}` };
   _cumCharts[key] = new Chart(el, {
     type: "line",
     data: { labels, datasets: [
-      { label: "0", data: labels.map(() => 0), borderColor: COL.muted,
+      { label: "당일 금액", data: labels.map(() => 0), borderColor: COL.muted,
         borderWidth: 1, borderDash: [4, 4], pointRadius: 0, fill: false, tension: 0 },
       { label: nm, data: values, borderColor: color, backgroundColor: color + "22",
         borderWidth: 2.5, pointRadius: 0, fill: true, tension: .25 },
