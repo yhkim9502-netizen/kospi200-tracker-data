@@ -124,6 +124,7 @@ function render(d) {
   renderAlerts(d);
 
   drawCharts(d, s, labels);
+  setupIndexOptionChain(d.index_option_chain);
 
   // 개별종목 파생 분석 섹션 (KOSPI200 블록 이후, 삼성전자 → SK하이닉스 순)
   const hasInsights = d.stock_insights && Object.keys(d.stock_insights).length;
@@ -800,6 +801,86 @@ function lineDS(label, data, color, dashOpt=false) {
 }
 function barDS(label, data, color) {
   return { label, data, backgroundColor:color+"cc", borderColor:color, borderWidth:1, borderRadius:2 };
+}
+
+// ---- KOSPI200 최신 행사가별 옵션 체인 ----
+let _idxChainChart = null, _idxChainMetric = "oi", _idxChainExpiry = null;
+
+function setupIndexOptionChain(chain) {
+  const section = document.getElementById("idxChainSection");
+  const expiryEl = document.getElementById("idxChainExpiry");
+  const metricEl = document.getElementById("idxChainMetric");
+  const expiries = chain && Array.isArray(chain.expiries)
+    ? chain.expiries.filter(x => x && Array.isArray(x.strikes) && x.strikes.length)
+    : [];
+  if (!section || !expiries.length) {
+    if (section) section.style.display = "none";
+    if (_idxChainChart) { _idxChainChart.destroy(); _idxChainChart = null; }
+    return;
+  }
+  section.style.display = "";
+  _idxChainExpiry = expiries.some(x => x.expiry === _idxChainExpiry)
+    ? _idxChainExpiry : expiries[0].expiry;
+  expiryEl.innerHTML = expiries.map(x =>
+    `<option value="${x.expiry}"${x.expiry===_idxChainExpiry?" selected":""}>${x.expiry.slice(0,4)}.${x.expiry.slice(4,6)}월</option>`
+  ).join("");
+  expiryEl.onchange = () => {
+    _idxChainExpiry = expiryEl.value;
+    renderIndexOptionChain(chain);
+  };
+  metricEl.querySelectorAll(".seg-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.m === _idxChainMetric);
+    btn.onclick = () => {
+      _idxChainMetric = btn.dataset.m;
+      metricEl.querySelectorAll(".seg-btn").forEach(b => b.classList.toggle("active", b === btn));
+      renderIndexOptionChain(chain);
+    };
+  });
+  renderIndexOptionChain(chain);
+}
+
+function renderIndexOptionChain(chain) {
+  const expiry = chain.expiries.find(x => x.expiry === _idxChainExpiry) || chain.expiries[0];
+  if (!expiry) return;
+  const rows = expiry.strikes.slice().sort((a,b) => Number(a.strike)-Number(b.strike));
+  const metric = {
+    oi:{field:"oi",label:"미결제약정",unit:"계약",scale:1,digits:0},
+    volume:{field:"volume",label:"거래량",unit:"계약",scale:1,digits:0},
+    value:{field:"value",label:"거래대금",unit:"억원",scale:1e8,digits:1},
+    iv:{field:"iv",label:"내재변동성",unit:"%",scale:1,digits:2},
+  }[_idxChainMetric];
+  const val = (r,side) => {
+    const v = r && r[side] && r[side][metric.field];
+    return v == null ? null : Number(v)/metric.scale;
+  };
+  const call = rows.map(r=>val(r,"call")), put = rows.map(r=>val(r,"put"));
+  const labels = rows.map(r=>nf(r.strike,1));
+  const canvasBox = document.getElementById("idxChainCanvas");
+  canvasBox.style.width = Math.max(720, rows.length*38) + "px";
+  if (_idxChainChart) _idxChainChart.destroy();
+  const options = baseOpts({
+    x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:26}},
+    y:{grid:{color:COL.line},beginAtZero:_idxChainMetric!=="iv",
+       title:{display:true,text:`${metric.label} (${metric.unit})`}}
+  });
+  options.plugins.tooltip.callbacks = {
+    title: items => `행사가 ${items[0] ? items[0].label : ""}p · ${expiry.expiry.slice(0,4)}.${expiry.expiry.slice(4,6)}월`,
+    label: ctx => `${ctx.dataset.label}: ${nf(ctx.raw,metric.digits)}${metric.unit}`
+  };
+  _idxChainChart = new Chart(document.getElementById("idxChain"), {
+    type:"bar", data:{labels,datasets:[
+      barDS(`콜 ${metric.label}`,call,STK_CALL_COL),
+      barDS(`풋 ${metric.label}`,put,STK_PUT_COL),
+    ]}, options
+  });
+  const cv=call.filter(v=>v!=null), pv=put.filter(v=>v!=null);
+  const cs=cv.reduce((a,v)=>a+v,0), ps=pv.reduce((a,v)=>a+v,0);
+  const isIv=_idxChainMetric==="iv";
+  const cstat=isIv?(cv.length?cs/cv.length:null):cs;
+  const pstat=isIv?(pv.length?ps/pv.length:null):ps;
+  document.getElementById("idxChainSummary").innerHTML =
+    `<strong>${chain.as_of || "—"} 기준</strong> · ${expiry.expiry.slice(0,4)}.${expiry.expiry.slice(4,6)}월물 · ` +
+    `${rows.length}개 행사가 · 콜 ${isIv?"평균":"합계"} ${nf(cstat,metric.digits)}${metric.unit} / 풋 ${isIv?"평균":"합계"} ${nf(pstat,metric.digits)}${metric.unit}`;
 }
 
 // ---- 개별주식선물 레이어 (시세/OI만) ----
