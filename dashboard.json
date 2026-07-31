@@ -6,7 +6,7 @@
     "as_of": "20260730",
     "calendar_today": "20260731",
     "source": "krx_live",
-    "generated_at": "2026-07-31T18:00:45+09:00",
+    "generated_at": "2026-07-31T18:03:22+09:00",
     "update_schedule": "next_business_day_08:00_KST",
     "cycles": {
       "index_futures": {
