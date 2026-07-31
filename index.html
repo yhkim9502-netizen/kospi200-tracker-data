@@ -339,6 +339,32 @@
     </div>
   </div>
 
+  <div class="card opt-chain" id="idxChainSection" style="display:none;margin:16px 0">
+    <div class="chain-head">
+      <div>
+        <h3 style="margin-bottom:2px">🧱 KOSPI200 행사가별 옵션 체인</h3>
+        <div class="hint">KRX 원자료 · 미결제약정·거래량·거래대금·내재변동성</div>
+      </div>
+      <div class="chain-controls">
+        <label class="hint" for="idxChainExpiry">만기</label>
+        <select class="chain-select" id="idxChainExpiry" aria-label="KOSPI200 옵션 만기 선택"></select>
+        <div class="seg" id="idxChainMetric" aria-label="KOSPI200 옵션 체인 지표 선택">
+          <button class="seg-btn active" data-m="oi">미결제약정</button>
+          <button class="seg-btn" data-m="volume">거래량</button>
+          <button class="seg-btn" data-m="value">거래대금</button>
+          <button class="seg-btn" data-m="iv">IV</button>
+        </div>
+      </div>
+    </div>
+    <div class="chain-summary" id="idxChainSummary"></div>
+    <div class="card" style="background:var(--panel2)">
+      <div class="chain-scroll">
+        <div class="chain-canvas" id="idxChainCanvas"><canvas id="idxChain"></canvas></div>
+      </div>
+    </div>
+    <div class="chain-summary">※ 행사가별 외국인 실제 보유 포지션은 공개 Open API 미제공입니다. 아래 값은 전체 시장의 계약·거래 지표이며 투자자별 포지션으로 해석하지 않습니다.</div>
+  </div>
+
   <h2 class="section-head stocks" id="secStocks">📈 개별종목 파생 분석 <span class="sh-sub">— 삼성전자 → SK하이닉스 순 · 주식선물 투자자별 수급 자동갱신 · 방향성 프록시</span></h2>
 
   <!-- 개별종목 인사이트 -->
@@ -411,6 +437,6 @@
 
   <div class="foot" id="foot"></div>
 </div>
-<script src="app.js?v=20260731-option-chain-2"></script>
+<script src="app.js?v=20260731-option-chain-3"></script>
 </body>
 </html>
