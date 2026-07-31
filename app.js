@@ -805,6 +805,7 @@ function barDS(label, data, color) {
 // ---- 개별주식선물 레이어 (시세/OI만) ----
 let _stkPxChart = null, _stkOiChart = null, _stkData = null;
 let _stkOptOiChart = null, _stkOptPcChart = null, _stkOptIvChart = null;
+let _stkChainChart = null, _stkChainMetric = "oi", _stkChainExpiry = null;
 const STK_SPOT_COL = C("--muted") || "#8a93a6";
 const STK_FUT_COL  = C("--accent") || "#5da9ff";
 const STK_OI_COL   = C("--foreign") || "#4cc38a";
@@ -921,7 +922,7 @@ function drawStockFuture(key) {
     `선물: 근월물(거래대금 최대 월물) · 옵션: 전체 월물 콜/풋 합산 · KRX Open API 일별매매정보. ` +
     expNote +
     `단일주식선물은 비분기월 2개 + 분기월(3·6·9·12월) 4개가 상장되어 각 계약월 둘째 목요일에 개별 만기하며, KOSPI200 선물의 분기 만기 주기와 다릅니다. 계약 전환(롤오버) 시점에는 서로 다른 계약이므로 시세·OI 선을 끊어 표시합니다. ` +
-    `개별주식 파생상품은 KRX Open API에서 투자자별 수급(외국인/기관/개인)을 제공하지 않아 시세·OI·콜/풋만 표시합니다.`;
+    `행사가별 옵션 체인은 최신 거래일의 미결제약정·거래대금·IV를 원자료 기준으로 표시합니다. 개별주식 옵션의 행사가별 외국인 보유 포지션은 KRX 공개 Open API에서 제공하지 않습니다.`;
 }
 
 function drawStockOptions(key) {
@@ -939,6 +940,8 @@ function drawStockOptions(key) {
     sumEl.innerHTML = ""; if (ivSumEl) ivSumEl.innerHTML = "";
     optBoxes.forEach(b => b && (b.style.display = "none"));
     capEls.forEach(c => c.style.display = "none");
+    const chainSection = document.getElementById("stkChainSection");
+    if (chainSection) chainSection.style.display = "none";
     return;
   }
   optBoxes.forEach(b => b && (b.style.display = ""));
@@ -992,6 +995,89 @@ function drawStockOptions(key) {
 
   // ==== 근월물 ATM 내재변동성 ====
   drawStockIv(opt, labels, grid);
+
+  // ==== 최신일 행사가별 옵션 체인 ====
+  drawStockOptionChain(opt, key);
+}
+
+function drawStockOptionChain(opt, key) {
+  const section = document.getElementById("stkChainSection");
+  const expiryEl = document.getElementById("stkChainExpiry");
+  const metricEl = document.getElementById("stkChainMetric");
+  const chain = opt && opt.chain;
+  const expiries = chain && Array.isArray(chain.expiries)
+    ? chain.expiries.filter(x => x && Array.isArray(x.strikes) && x.strikes.length)
+    : [];
+  if (!section || !expiries.length) {
+    if (section) section.style.display = "none";
+    if (_stkChainChart) { _stkChainChart.destroy(); _stkChainChart = null; }
+    return;
+  }
+  section.style.display = "";
+  const valid = expiries.some(x => x.expiry === _stkChainExpiry);
+  _stkChainExpiry = valid ? _stkChainExpiry : expiries[0].expiry;
+  expiryEl.innerHTML = expiries.map(x =>
+    `<option value="${x.expiry}"${x.expiry===_stkChainExpiry?" selected":""}>${x.expiry.slice(0,4)}.${x.expiry.slice(4,6)}월</option>`
+  ).join("");
+  expiryEl.onchange = () => {
+    _stkChainExpiry = expiryEl.value;
+    renderStockOptionChain(opt, key);
+  };
+  metricEl.querySelectorAll(".seg-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.m === _stkChainMetric);
+    btn.onclick = () => {
+      _stkChainMetric = btn.dataset.m;
+      metricEl.querySelectorAll(".seg-btn").forEach(b => b.classList.toggle("active", b === btn));
+      renderStockOptionChain(opt, key);
+    };
+  });
+  renderStockOptionChain(opt, key);
+}
+
+function renderStockOptionChain(opt, key) {
+  const chain = opt.chain;
+  const expiry = chain.expiries.find(x => x.expiry === _stkChainExpiry) || chain.expiries[0];
+  if (!expiry) return;
+  const rows = expiry.strikes.slice().sort((a,b) => Number(a.strike)-Number(b.strike));
+  const metric = {
+    oi: {field:"oi", label:"미결제약정", unit:"계약", scale:1, digits:0},
+    value: {field:"value", label:"거래대금", unit:"억원", scale:1e8, digits:1},
+    iv: {field:"iv", label:"내재변동성", unit:"%", scale:1, digits:2},
+  }[_stkChainMetric] || {field:"oi", label:"미결제약정", unit:"계약", scale:1, digits:0};
+  const value = (r, side) => {
+    const v = r && r[side] && r[side][metric.field];
+    return v == null ? null : Number(v) / metric.scale;
+  };
+  const labels = rows.map(r => nf(r.strike));
+  const call = rows.map(r => value(r, "call"));
+  const put = rows.map(r => value(r, "put"));
+  const canvasBox = document.getElementById("stkChainCanvas");
+  canvasBox.style.width = Math.max(720, rows.length * 42) + "px";
+  if (_stkChainChart) _stkChainChart.destroy();
+  const options = baseOpts({
+    x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:24}},
+    y:{grid:{color:COL.line},beginAtZero:_stkChainMetric!=="iv",
+       title:{display:true,text:`${metric.label} (${metric.unit})`}}
+  });
+  options.plugins.tooltip.callbacks = {
+    title: items => `행사가 ${items[0] ? items[0].label : ""}원 · ${expiry.expiry.slice(0,4)}.${expiry.expiry.slice(4,6)}월`,
+    label: ctx => `${ctx.dataset.label}: ${nf(ctx.raw, metric.digits)}${metric.unit}`
+  };
+  _stkChainChart = new Chart(document.getElementById("stkChain"), {
+    type:"bar",
+    data:{labels,datasets:[
+      barDS(`콜 ${metric.label}`, call, STK_CALL_COL),
+      barDS(`풋 ${metric.label}`, put, STK_PUT_COL),
+    ]},
+    options
+  });
+  const totalCall = call.reduce((a,v)=>a+(v||0),0);
+  const totalPut = put.reduce((a,v)=>a+(v||0),0);
+  const atm = opt.atm && opt.atm.strike;
+  document.getElementById("stkChainSummary").innerHTML =
+    `<strong>${chain.as_of || "—"} 기준</strong> · ${expiry.expiry.slice(0,4)}.${expiry.expiry.slice(4,6)}월물 · ` +
+    `${rows.length}개 행사가 · 콜 합계 ${nf(totalCall,metric.digits)}${metric.unit} / 풋 합계 ${nf(totalPut,metric.digits)}${metric.unit}` +
+    (atm ? ` · ATM 기준 행사가 ${nf(atm)}원` : "");
 }
 
 const STK_IV_MID = C("--warn") || "#ffb347";
