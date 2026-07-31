@@ -1071,12 +1071,19 @@ function renderStockOptionChain(opt, key) {
     ]},
     options
   });
-  const totalCall = call.reduce((a,v)=>a+(v||0),0);
-  const totalPut = put.reduce((a,v)=>a+(v||0),0);
+  const validCall = call.filter(v => v != null);
+  const validPut = put.filter(v => v != null);
+  const totalCall = validCall.reduce((a,v)=>a+v,0);
+  const totalPut = validPut.reduce((a,v)=>a+v,0);
+  const callStat = _stkChainMetric === "iv"
+    ? (validCall.length ? totalCall / validCall.length : null) : totalCall;
+  const putStat = _stkChainMetric === "iv"
+    ? (validPut.length ? totalPut / validPut.length : null) : totalPut;
+  const statLabel = _stkChainMetric === "iv" ? "평균" : "합계";
   const atm = opt.atm && opt.atm.strike;
   document.getElementById("stkChainSummary").innerHTML =
     `<strong>${chain.as_of || "—"} 기준</strong> · ${expiry.expiry.slice(0,4)}.${expiry.expiry.slice(4,6)}월물 · ` +
-    `${rows.length}개 행사가 · 콜 합계 ${nf(totalCall,metric.digits)}${metric.unit} / 풋 합계 ${nf(totalPut,metric.digits)}${metric.unit}` +
+    `${rows.length}개 행사가 · 콜 ${statLabel} ${nf(callStat,metric.digits)}${metric.unit} / 풋 ${statLabel} ${nf(putStat,metric.digits)}${metric.unit}` +
     (atm ? ` · ATM 기준 행사가 ${nf(atm)}원` : "");
 }
 
