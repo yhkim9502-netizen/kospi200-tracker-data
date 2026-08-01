@@ -124,7 +124,7 @@ function render(d) {
   renderAlerts(d);
 
   drawCharts(d, s, labels);
-  setupIndexOptionChain(d.index_option_chain);
+  setupIndexOptionChain(d.index_option_chain, L.index_close);
 
   // 개별종목 파생 분석 섹션 (KOSPI200 블록 이후, 삼성전자 → SK하이닉스 순)
   const hasInsights = d.stock_insights && Object.keys(d.stock_insights).length;
@@ -805,8 +805,10 @@ function barDS(label, data, color) {
 
 // ---- KOSPI200 최신 행사가별 옵션 체인 ----
 let _idxChainChart = null, _idxChainMetric = "oi", _idxChainExpiry = null;
+let _idxSpot = null;
 
-function setupIndexOptionChain(chain) {
+function setupIndexOptionChain(chain, indexClose) {
+  _idxSpot = Number.isFinite(Number(indexClose)) ? Number(indexClose) : null;
   const section = document.getElementById("idxChainSection");
   const expiryEl = document.getElementById("idxChainExpiry");
   const metricEl = document.getElementById("idxChainMetric");
@@ -843,6 +845,10 @@ function renderIndexOptionChain(chain) {
   const expiry = chain.expiries.find(x => x.expiry === _idxChainExpiry) || chain.expiries[0];
   if (!expiry) return;
   const rows = expiry.strikes.slice().sort((a,b) => Number(a.strike)-Number(b.strike));
+  const nearestIndex = (_idxSpot == null || !rows.length) ? -1
+    : rows.reduce((best, r, i) =>
+        Math.abs(Number(r.strike)-_idxSpot) < Math.abs(Number(rows[best].strike)-_idxSpot) ? i : best, 0);
+  const nearestStrike = nearestIndex >= 0 ? Number(rows[nearestIndex].strike) : null;
   const metric = {
     oi:{field:"oi",label:"미결제약정",unit:"계약",scale:1,digits:0},
     volume:{field:"volume",label:"거래량",unit:"계약",scale:1,digits:0},
@@ -859,7 +865,9 @@ function renderIndexOptionChain(chain) {
   canvasBox.style.width = Math.max(720, rows.length*38) + "px";
   if (_idxChainChart) _idxChainChart.destroy();
   const options = baseOpts({
-    x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:26}},
+    x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:26,
+       color:(ctx)=>ctx.index===nearestIndex?(C("--warn")||"#ffb347"):(C("--muted")||"#8a93a6"),
+       font:(ctx)=>ctx.index===nearestIndex?{weight:"bold"}:{}}},
     y:{grid:{color:COL.line},beginAtZero:_idxChainMetric!=="iv",
        title:{display:true,text:`${metric.label} (${metric.unit})`}}
   });
@@ -873,6 +881,15 @@ function renderIndexOptionChain(chain) {
       barDS(`풋 ${metric.label}`,put,STK_PUT_COL),
     ]}, options
   });
+  // 전체 행사가의 오름차순은 유지하되, 처음 열릴 때 현재 지수와 가장
+  // 가까운 행사가가 가로 스크롤 중앙에 오도록 이동한다.
+  const scroller = canvasBox.closest(".chain-scroll");
+  if (scroller && nearestIndex >= 0) {
+    requestAnimationFrame(() => {
+      const strikeX = (nearestIndex + 0.5) * canvasBox.offsetWidth / rows.length;
+      scroller.scrollLeft = Math.max(0, strikeX - scroller.clientWidth / 2);
+    });
+  }
   const cv=call.filter(v=>v!=null), pv=put.filter(v=>v!=null);
   const cs=cv.reduce((a,v)=>a+v,0), ps=pv.reduce((a,v)=>a+v,0);
   const isIv=_idxChainMetric==="iv";
@@ -880,6 +897,7 @@ function renderIndexOptionChain(chain) {
   const pstat=isIv?(pv.length?ps/pv.length:null):ps;
   document.getElementById("idxChainSummary").innerHTML =
     `<strong>${chain.as_of || "—"} 기준</strong> · ${expiry.expiry.slice(0,4)}.${expiry.expiry.slice(4,6)}월물 · ` +
+    (_idxSpot == null ? "" : `현재 KOSPI200 ${nf(_idxSpot,2)}p · 기준 행사가 ${nf(nearestStrike,1)}p · `) +
     `${rows.length}개 행사가 · 콜 ${isIv?"평균":"합계"} ${nf(cstat,metric.digits)}${metric.unit} / 풋 ${isIv?"평균":"합계"} ${nf(pstat,metric.digits)}${metric.unit}`;
 }
 
