@@ -909,7 +909,16 @@ function renderIndexOptionChain(chain) {
       if (_idxSpot==null || nearestIndex<0) return;
       const {ctx, chartArea, scales:{x}} = chart;
       if (!chartArea || !x) return;
-      const px = x.getPixelForValue(nearestIndex);
+      let px = x.getPixelForValue(nearestIndex);
+      if (_idxSpot > Number(rows[0].strike) && _idxSpot < Number(rows[rows.length-1].strike)) {
+        const hi = rows.findIndex(r => Number(r.strike) >= _idxSpot);
+        const lo = Math.max(0, hi-1);
+        const loStrike = Number(rows[lo].strike), hiStrike = Number(rows[hi].strike);
+        if (hiStrike > loStrike) {
+          const w = (_idxSpot-loStrike)/(hiStrike-loStrike);
+          px = x.getPixelForValue(lo) + (x.getPixelForValue(hi)-x.getPixelForValue(lo))*w;
+        }
+      }
       const warn = C("--warn") || "#ffb347";
       ctx.save();
       ctx.strokeStyle = warn;
