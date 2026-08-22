@@ -1208,6 +1208,26 @@ function renderStockOptionChain(opt, key) {
   const expiry = chain.expiries.find(x => x.expiry === _stkChainExpiry) || chain.expiries[0];
   if (!expiry) return;
   const rows = expiry.strikes.slice().sort((a,b) => Number(a.strike)-Number(b.strike));
+  const stock = _stkData && _stkData[key];
+  const latestSpot = stock && stock.latest && Number(stock.latest.spot);
+  const seriesSpot = stock && stock.series && Array.isArray(stock.series.spot)
+    ? [...stock.series.spot].reverse().find(v => v != null) : null;
+  const spot = Number.isFinite(latestSpot) ? latestSpot
+    : (Number.isFinite(Number(seriesSpot)) ? Number(seriesSpot) : null);
+  const stockLabel = (stock && stock.label) || (key === "samsung" ? "삼성전자" : key === "skhynix" ? "SK하이닉스" : "현재 주가");
+  const nearestIndex = (spot == null || !rows.length) ? -1
+    : rows.reduce((best, r, i) =>
+        Math.abs(Number(r.strike)-spot) < Math.abs(Number(rows[best].strike)-spot) ? i : best, 0);
+  const nearestStrike = nearestIndex >= 0 ? Number(rows[nearestIndex].strike) : null;
+  // 현재 주가 ±10% 안에서 콜+풋 OI가 큰 상위 3개 행사가를 물량 집중 구간으로 정의.
+  const oiLevels = (spot == null ? [] : rows.map((r, index) => {
+    const callOi = Number(r.call && r.call.oi) || 0;
+    const putOi = Number(r.put && r.put.oi) || 0;
+    return {index, strike:Number(r.strike), callOi, putOi,
+            total:callOi+putOi, dominant:callOi>=putOi?"call":"put"};
+  }).filter(x => Math.abs(x.strike-spot) <= spot*0.10 && x.total>0)
+    .sort((a,b) => b.total-a.total).slice(0,3));
+  const oiLevelByIndex = new Map(oiLevels.map(x => [x.index, x]));
   const metric = {
     oi: {field:"oi", label:"미결제약정", unit:"계약", scale:1, digits:0},
     value: {field:"value", label:"거래대금", unit:"억원", scale:1e8, digits:1},
@@ -1224,7 +1244,11 @@ function renderStockOptionChain(opt, key) {
   canvasBox.style.width = Math.max(720, rows.length * 42) + "px";
   if (_stkChainChart) _stkChainChart.destroy();
   const options = baseOpts({
-    x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:24}},
+    x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:24,
+       color:(ctx)=>ctx.index===nearestIndex?(C("--warn")||"#ffb347"):
+         (oiLevelByIndex.get(ctx.index)?.dominant==="call"?STK_CALL_COL:
+          oiLevelByIndex.has(ctx.index)?STK_PUT_COL:(C("--muted")||"#8a93a6")),
+       font:(ctx)=>(ctx.index===nearestIndex||oiLevelByIndex.has(ctx.index))?{weight:"bold"}:{}}},
     y:{grid:{color:COL.line},beginAtZero:_stkChainMetric!=="iv",
        title:{display:true,text:`${metric.label} (${metric.unit})`}}
   });
@@ -1232,14 +1256,78 @@ function renderStockOptionChain(opt, key) {
     title: items => `행사가 ${items[0] ? items[0].label : ""}원 · ${expiry.expiry.slice(0,4)}.${expiry.expiry.slice(4,6)}월`,
     label: ctx => `${ctx.dataset.label}: ${nf(ctx.raw, metric.digits)}${metric.unit}`
   };
+  const levelOverlay = {
+    id:"stockPriceAndOiLevels",
+    beforeDatasetsDraw(chart) {
+      const {ctx, chartArea, scales:{x}} = chart;
+      if (!chartArea || !x) return;
+      const step = rows.length > 1
+        ? Math.abs(x.getPixelForValue(1)-x.getPixelForValue(0)) : 12;
+      ctx.save();
+      oiLevels.forEach(level => {
+        const px = x.getPixelForValue(level.index);
+        const col = level.dominant==="call" ? "76,195,138" : "255,107,107";
+        ctx.fillStyle = "rgba(" + col + ",.17)";
+        ctx.fillRect(px-step*.48, chartArea.top, step*.96, chartArea.bottom-chartArea.top);
+        ctx.strokeStyle = "rgba(" + col + ",.85)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(px-step*.48, chartArea.top, step*.96, chartArea.bottom-chartArea.top);
+      });
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart) {
+      if (spot==null || nearestIndex<0) return;
+      const {ctx, chartArea, scales:{x}} = chart;
+      if (!chartArea || !x) return;
+      let px = x.getPixelForValue(nearestIndex);
+      if (spot > Number(rows[0].strike) && spot < Number(rows[rows.length-1].strike)) {
+        const hi = rows.findIndex(r => Number(r.strike) >= spot);
+        const lo = Math.max(0, hi-1);
+        const loStrike = Number(rows[lo].strike), hiStrike = Number(rows[hi].strike);
+        if (hiStrike > loStrike) {
+          const w = (spot-loStrike)/(hiStrike-loStrike);
+          px = x.getPixelForValue(lo) + (x.getPixelForValue(hi)-x.getPixelForValue(lo))*w;
+        }
+      }
+      const warn = C("--warn") || "#ffb347";
+      ctx.save();
+      ctx.strokeStyle = warn;
+      ctx.lineWidth = 4;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(px, chartArea.top);
+      ctx.lineTo(px, chartArea.bottom);
+      ctx.stroke();
+      const label = stockLabel + " 현재가 " + nf(spot) + "원";
+      ctx.font = "bold 12px sans-serif";
+      const pad=7, tw=ctx.measureText(label).width, boxW=tw+pad*2, boxH=25;
+      const bx=Math.max(chartArea.left,Math.min(px-boxW/2,chartArea.right-boxW));
+      const by=chartArea.top+5;
+      ctx.fillStyle = warn;
+      ctx.fillRect(bx,by,boxW,boxH);
+      ctx.fillStyle = "#101722";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label,bx+pad,by+boxH/2);
+      ctx.restore();
+    }
+  };
   _stkChainChart = new Chart(document.getElementById("stkChain"), {
     type:"bar",
     data:{labels,datasets:[
       barDS(`콜 ${metric.label}`, call, STK_CALL_COL),
       barDS(`풋 ${metric.label}`, put, STK_PUT_COL),
     ]},
-    options
+    options,
+    plugins:[levelOverlay]
   });
+  // 종목을 선택하거나 만기를 바꿀 때 현재 주가와 가장 가까운 행사가를 중앙에 표시.
+  const scroller = canvasBox.closest(".chain-scroll");
+  if (scroller && nearestIndex >= 0) {
+    requestAnimationFrame(() => {
+      const strikeX = (nearestIndex + 0.5) * canvasBox.offsetWidth / rows.length;
+      scroller.scrollLeft = Math.max(0, strikeX - scroller.clientWidth / 2);
+    });
+  }
   const validCall = call.filter(v => v != null);
   const validPut = put.filter(v => v != null);
   const totalCall = validCall.reduce((a,v)=>a+v,0);
@@ -1249,11 +1337,14 @@ function renderStockOptionChain(opt, key) {
   const putStat = _stkChainMetric === "iv"
     ? (validPut.length ? totalPut / validPut.length : null) : totalPut;
   const statLabel = _stkChainMetric === "iv" ? "평균" : "합계";
-  const atm = opt.atm && opt.atm.strike;
+  const levelText = oiLevels.map((x,i) =>
+    `<span style="color:${x.dominant==="call"?STK_CALL_COL:STK_PUT_COL}">#${i+1} ${nf(x.strike)}원 ${x.dominant==="call"?"콜":"풋"} 우위</span> ` +
+    `(콜 ${nf(x.callOi)} / 풋 ${nf(x.putOi)})`).join(" · ");
   document.getElementById("stkChainSummary").innerHTML =
     `<strong>${chain.as_of || "—"} 기준</strong> · ${expiry.expiry.slice(0,4)}.${expiry.expiry.slice(4,6)}월물 · ` +
+    (spot == null ? "" : `현재 ${stockLabel} ${nf(spot)}원 · 기준 행사가 ${nf(nearestStrike)}원 · `) +
     `${rows.length}개 행사가 · 콜 ${statLabel} ${nf(callStat,metric.digits)}${metric.unit} / 풋 ${statLabel} ${nf(putStat,metric.digits)}${metric.unit}` +
-    (atm ? ` · ATM 기준 행사가 ${nf(atm)}원` : "");
+    (levelText ? `<br><strong>현재가 ±10% OI 집중 상위 3</strong> · ${levelText}` : "");
 }
 
 const STK_IV_MID = C("--warn") || "#ffb347";
